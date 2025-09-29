@@ -1,10 +1,57 @@
 # VisualReF: Visual Relevance Feedback Prototype for Interactive Image Retrieval
 
+This is an official implementation of the demo paper "VisualReF: Visual Relevance Feedback Prototype for Interactive Image Retrieval" presented at Recsys'25.
+
+VisualReFis the prototype of an interactive image search system based on visual relevance feedback.
+
+The system that uses relevance feedback provided by the user to improve the search results. Specifically, the user can annotate the relevance and irrelevance of the retrieved images. These annotations are then used by image captioning model (currently, LLaVA-1.5 7b) to generate captions for image fragments from relevance feedback. These captions are then used to refine the search results using Rocchio's algorithm.
+
+Bibtex:
+```
+@inproceedings{10.1145/3705328.3759341,
+author = {Khaertdinov, Bulat and Popa, Mirela and Tintarev, Nava},
+title = {VisualReF: Interactive Image Search Prototype with Visual Relevance Feedback},
+year = {2025},
+isbn = {9798400713644},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3705328.3759341},
+doi = {10.1145/3705328.3759341},
+booktitle = {Proceedings of the Nineteenth ACM Conference on Recommender Systems},
+pages = {1353–1356},
+numpages = {4},
+location = {
+},
+series = {RecSys '25}
+}
+```
+
+## Example of the use case:
+(a) Input query and retrieved images:
+
+![](assets/a.png)
+
+(b) User annotates the relevance and irrelevance of the retrieved images and the system returns the explanation of the relevance (captioning results)
+
+![](assets/b.png)
+
+(c) User launches the refinement process and gets the updated search results:
+
+![](assets/c.png)
+
+Check more examples in the `./assets` folder.
+
+## Configs:
+- Captioning model and prompts: `configs/captioning/`. Prompts used to generate captions can be changed based on the use case and level of detail required. Advanced prompting techniques can be used to improve the quality of the captions.
+- Demo: `configs/demo/`. Configs for the demo app: retrieval backbone (CLIP and SigLIP are currently supported), image database, and captioning model.
+
 ## Getting started
+
+The prototype is implemented using Gradio, PyTorch, and Hugging Face. It supports CPU and GPU, with a GPU (16+ GB VRAM) recommended for faster inference.
 
 Python version: 3.11
 
-We use venv for managing project dependencies.
+We use `venv` for managing project dependencies.
 
 ```
 python -m venv venv
@@ -65,6 +112,8 @@ We use two open-source datasets as use-cases for our demo:
 
 ## Launch the prototype
 
+### Local monolith version (`demo/app.py`)
+
 - With image database based on COCO dataset and `clip-vit-large-patch14`:
     ```
     python -m demo.app \
@@ -78,3 +127,43 @@ We use two open-source datasets as use-cases for our demo:
     --config_path configs/demo/retail_clip_large.yaml \
     --captioning_model_config_path configs/captioning/retail_llava_8bit.yaml 
     ```
+
+### Service-based (client-server) architecture
+
+#### Server (FastAPI)
+Make sure all dependencies are installed:
+```
+pip install -r requirements.txt
+```
+
+Launch retrieval server with GPU support (faiss, retrieval backbone, VLMs):
+```
+CONFIG_PATH=configs/demo/coco_clip_large.yaml \
+CAPTIONING_CONFIG_PATH=configs/captioning/llava_8bit.yaml \
+python -m server.retrieval_server
+```
+
+Check status:
+```
+curl -s http://localhost:8000/health
+```
+
+#### Client (gradio)
+Install client requirements:
+```
+pip install -r requirements-client.txt
+```
+
+Check that server responds:
+```
+curl -s http://<SERVER_IP>:8000/health
+```
+
+Launch client with gradio interface:
+```
+python -m demo.app_client \
+    --config_path configs/demo/coco_clip_base.yaml \
+    --captioning_model_config_path configs/captioning/llava_8bit.yaml \
+    --server_url http://<SERVER_IP>:8000 \
+    --port 7861
+```
