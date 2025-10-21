@@ -4,7 +4,6 @@ from src.services.retrieval_service import RetrievalService
 def _default_config():
     return {
         "IMAGE_CORPUS_PATH": "data/coco/",
-        "INDEX_PATH": "faiss/coco/openai/clip-vit-large-patch14/image_index.faiss",
         "VLM_MODEL_FAMILY": "clip",
         "VLM_MODEL_NAME": "openai/clip-vit-large-patch14",
         "IMG_SIZE": 224,
@@ -25,6 +24,7 @@ def _init_retrieval_service():
     return RetrievalService(
         config=_default_config(),
         captioning_model_config=_default_captioning_config(),
+        faiss_index="faiss/coco/openai/clip-vit-large-patch14/image_index.faiss",
         alpha=0.6,
         beta=0.2,
         gamma=0.2,

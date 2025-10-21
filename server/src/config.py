@@ -10,9 +10,9 @@ class ServerSettings(BaseSettings):
 
     base_dir: Path = Path(".").resolve()
 
-    config_path: Path 
-    index_path: Path
-    logs_path: Path
+    config_path: Path | None = None
+    index_path: Path | None = None
+    logs_path: Path | None = None
     captioning_config_path: Path | None = None
 
     @field_validator(
