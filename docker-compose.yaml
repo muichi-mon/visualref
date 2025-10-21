@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  retrieval-server:
+    build:
+      context: server
+      dockerfile: Dockerfile
+    image: retrieval-demo-server:latest
+    container_name: retrieval-server
+    ports:
+      - "8000:8000"
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH:-configs/demo/clip_large.yaml}
+      - CAPTIONING_CONFIG_PATH=${CAPTIONING_CONFIG_PATH:-configs/captioning/llava_8bit.yaml}
+      - INDEX_PATH=${INDEX_PATH:-faiss/coco/openai/clip-vit-large-patch14/image_index.faiss}
+      - LOGS_PATH=${LOGS_PATH:-logs/retrieval_logs_clip_large.json}
+    volumes:
+      - ./configs:/app/configs
+      - ./faiss:/app/faiss
+      - ./data:/app/data
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+  retrieval-server-visual:
+    build:
+      context: server
+      dockerfile: Dockerfile
+    image: retrieval-demo-server:latest
+    container_name: retrieval-server-visual
+    command: python -m src.retrieval_server_visual --port 8001
+    ports:
+      - "8001:8001"
+    environment:
+      - CONFIG_PATH=${CONFIG_PATH:-configs/demo/clip_large.yaml}
+      - INDEX_PATH=${INDEX_PATH:-faiss/coco/openai/clip-vit-large-patch14/image_index.faiss}
+      - LOGS_PATH=${LOGS_PATH:-logs/retrieval_logs_clip_large.json}
+    volumes:
+      - ./configs:/app/configs
+      - ./faiss:/app/faiss
+      - ./data:/app/data
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+  retrieval-client:
+    build:
+      context: client
+      dockerfile: Dockerfile
+    image: retrieval-demo-client:latest
+    container_name: retrieval-client
+    ports:
+      - "7862:7862"
+    environment:
+      - CLIENT_CONFIG_PATH=${CLIENT_CONFIG_PATH:-configs/client/configs.yaml}
+      - CAPTIONING_CONFIG_PATH=${CAPTIONING_CONFIG_PATH:-configs/captioning/llava_8bit.yaml}
+      - SERVER_URL=${SERVER_URL:-http://retrieval-server:8000}
+      - PORT=${PORT:-7862}
+      - NO_PROXY=127.0.0.1,localhost,retrieval-server,retrieval-client,172.19.0.0/16
+      - no_proxy=127.0.0.1,localhost,retrieval-server,retrieval-client,172.19.0.0/16
+    volumes:
+      - ./configs:/app/configs
+    depends_on:
+      - retrieval-server
+  retrieval-client-visual:
+    build:
+      context: client
+    image: retrieval-demo-client:latest
+    command: "python -m src.demo.app_client_visual \
+      --client_config_path ${CLIENT_CONFIG_PATH} \
+      --server_url ${SERVER_VISUAL_URL} \
+      --port ${PORT}"
+    ports:
+      - "7863:7863"
+    environment:
+      - CLIENT_CONFIG_PATH=${CLIENT_CONFIG_PATH:-configs/client/configs.yaml}
+      - CAPTIONING_CONFIG_PATH=${CAPTIONING_CONFIG_PATH:-configs/captioning/llava_8bit.yaml}
+      - SERVER_VISUAL_URL=${SERVER_VISUAL_URL:-http://retrieval-server-visual:8001}
+      - PORT=${PORT:-7863}
+      - NO_PROXY=127.0.0.1,localhost,retrieval-server-visual,retrieval-client-visual,172.19.0.0/16
+      - no_proxy=127.0.0.1,localhost,retrieval-server-visual,retrieval-client-visual,172.19.0.0/16
+    volumes:
+      - ./configs:/app/configs

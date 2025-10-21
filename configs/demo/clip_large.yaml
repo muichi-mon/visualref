@@ -1,0 +1,6 @@
+VLM_MODEL_FAMILY: "clip" 
+VLM_MODEL_NAME: "openai/clip-vit-large-patch14"
+IMG_SIZE: 224
+PATCH_SIZE: 14
+
+TOP_K: 5

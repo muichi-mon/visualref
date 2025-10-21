@@ -82,7 +82,8 @@ We use two open-source datasets as use-cases for our demo:
 
     Build a faiss index with `clip-vit-large-patch14` for the test set:
     ```
-    python write_faiss_index.py \
+    cd ./server
+    python -m src.utils.write_faiss_index \
         --data data/coco/test2014 \
         --output faiss/coco/ \
         --batch_size 64 \
@@ -102,7 +103,8 @@ We use two open-source datasets as use-cases for our demo:
 
     Build faiss index with `clip-vit-large-patch14`:
     ```
-    python write_faiss_index.py \
+    cd ./server
+    python -m src.utils.write_faiss_index \
         --data data/retail-786k_256/ \
         --output faiss/retail/test \
         --batch_size 64 \
@@ -112,58 +114,64 @@ We use two open-source datasets as use-cases for our demo:
 
 ## Launch the prototype
 
-### Local monolith version (`demo/app.py`)
+The prorotype has two versions:
+    - **Pure visual feedback.** In this case user feedback is processed directly from the visual modality.
+    - **GenAI feedback.** This version use Llava-1.5-7b to caption (ir)relevant image segments to run relev
 
-- With image database based on COCO dataset and `clip-vit-large-patch14`:
-    ```
-    python -m demo.app \
-        --config_path configs/demo/coco_clip_large.yaml \
-        --captioning_model_config_path configs/captioning/llava_8bit.yaml 
-    ```
+For each version, we have a separate client (gradio interface) and retrieval server services (overall, 4 services). Each of them is running in separate Docker containers and communicating via an API.
 
-- With image database based on Retail-786k dataset and `clip-vit-large-patch14`:
-    ```
-    python -m demo.app \
-    --config_path configs/demo/retail_clip_large.yaml \
-    --captioning_model_config_path configs/captioning/retail_llava_8bit.yaml 
-    ```
+### 1. Quickstart with Docker Compose
 
-### Service-based (client-server) architecture
+The recommended way to run both services is using Docker Compose. This will automatically build and launch both containers with the correct configuration and networking.
 
-#### Server (FastAPI)
-Make sure all dependencies are installed:
-```
-pip install -r requirements.txt
-```
+#### Prerequisites
+- Docker and Docker Compose installed
 
-Launch retrieval server with GPU support (faiss, retrieval backbone, VLMs):
-```
-CONFIG_PATH=configs/demo/coco_clip_large.yaml \
-CAPTIONING_CONFIG_PATH=configs/captioning/llava_8bit.yaml \
-python -m server.retrieval_server
-```
+#### Steps
 
-Check status:
-```
-curl -s http://localhost:8000/health
-```
+1. Configure your settings:
 
-#### Client (gradio)
-Install client requirements:
-```
-pip install -r requirements-client.txt
-```
+   - Define your configuration files or edit the default ones (e.g., `configs/demo/coco_clip_large.yaml` and `configs/captioning/llava_8bit.yaml`).
+   - Set up local env file, containing URL of servers. For example, you can create `.env.local` in the root of the repo:
+   
+   ```
+    SERVER_URL=http://retrieval-server:8000
+    SERVER_VISUAL_URL=http://retrieval-server-visual:8001
+   ```
 
-Check that server responds:
-```
-curl -s http://<SERVER_IP>:8000/health
-```
+   Such configuration can be used for running both server and client on the same device.
 
-Launch client with gradio interface:
-```
-python -m demo.app_client \
-    --config_path configs/demo/coco_clip_base.yaml \
-    --captioning_model_config_path configs/captioning/llava_8bit.yaml \
-    --server_url http://<SERVER_IP>:8000 \
-    --port 7861
-```
+2. Build and launch services:
+
+   Build the images for both server and client (Gradio UI). 
+
+   **Pure visual feedback**. From the project root directory:
+   - Server:
+   ```
+   sh ./scripts/launch_docker_visual_server.py
+   ```
+   - Client:
+   ```
+   sh ./scripts/launch_docker_visual_client.py
+   ```
+
+   **GenAI feedback**. From the project root directory:
+   - Server:
+   ```
+   sh ./scripts/launch_docker_llava_server.py
+   ```
+   - Client:
+   ```
+   sh ./scripts/launch_docker_llava_client.py
+   ```
+
+3. **Access the Gradio client UI**
+
+   Once the containers are up, open your browser and go to:
+   ```
+   http://localhost:<PORT>
+   ```
+   By default port 7862 is assigned for an interface. You can check the port in the output of the script launching client container.
+
+**Note:**
+- GPU usage in Docker requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
