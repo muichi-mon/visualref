@@ -2,7 +2,7 @@
 
 This is an official implementation of the demo paper "VisualReF: Visual Relevance Feedback Prototype for Interactive Image Retrieval" presented at Recsys'25.
 
-VisualReFis the prototype of an interactive image search system based on visual relevance feedback.
+VisualReF is the prototype of an interactive image search system based on visual relevance feedback.
 
 The system that uses relevance feedback provided by the user to improve the search results. Specifically, the user can annotate the relevance and irrelevance of the retrieved images. These annotations are then used by image captioning model (currently, LLaVA-1.5 7b) to generate captions for image fragments from relevance feedback. These captions are then used to refine the search results using Rocchio's algorithm.
 
