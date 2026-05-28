@@ -4,6 +4,7 @@ from transformers import (
     AutoProcessor,
     CLIPModel,
     LlavaForConditionalGeneration,
+    LlavaOnevisionForConditionalGeneration,
     SiglipModel,
 )
 
@@ -26,8 +27,8 @@ CONFIGS = {
         "wrapper_class": SigLipWrapper,
     },
     "llava": {
-        "model_id": "llava-hf/llava-1.5-7b-hf",
-        "model_class": LlavaForConditionalGeneration,
+        "model_id": "llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
+        "model_class": LlavaOnevisionForConditionalGeneration,
         "processor_class": AutoProcessor,
         "wrapper_class": LLaVaWrapper,
     },

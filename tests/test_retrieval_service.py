@@ -18,8 +18,7 @@ def _default_config():
 def _default_captioning_config():
     return {
         "MODEL_FAMILY": "llava",
-        "MODEL_ID": "llava-hf/llava-1.5-7b-hf",
-        "USE_8BIT": True,
+        "MODEL_ID": "llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
         "PROMPT": "Describe distinct features of the image in 5-10 words.",
     }
 

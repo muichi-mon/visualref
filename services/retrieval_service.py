@@ -65,8 +65,7 @@ class RetrievalService:
         if self.captioning_model_config["MODEL_FAMILY"] == "llava":
             self.captioning_model = init_llava(
                 model_config=model_config,
-                device=self.device,
-                use_8bit=self.captioning_model_config["USE_8BIT"]
+                device=self.device
             )
         else:
             raise ValueError(

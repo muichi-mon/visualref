@@ -1,4 +1,5 @@
 MODEL_FAMILY: "llava"
-MODEL_ID: "llava-hf/llava-1.5-7b-hf"
-USE_8BIT: true
+MODEL_ID: "llava-hf/llava-onevision-qwen2-0.5b-ov-hf"
+DEVICE: "cpu"
+USE_8BIT: false
 PROMPT: "Describe distinct features of the image in 5-10 words."

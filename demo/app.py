@@ -50,7 +50,7 @@ experiment_id = 0
 accumulated_query_embeddings = {"query_embedding": None}
 
 config = load_yaml(CONFIG_PATH)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+default_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # VLM: Retrieval Backbone
 model_config = get_model_config(config["VLM_MODEL_FAMILY"], config["VLM_MODEL_NAME"])
@@ -66,15 +66,22 @@ with open(os.path.join(os.path.dirname(config["INDEX_PATH"]), "image_paths.txt")
 
 # Initialize relevance feedback model
 captioning_model_config = load_yaml(CAPTIONING_MODEL_CONFIG_PATH)
+captioning_device = torch.device(captioning_model_config.get("DEVICE", default_device.type))
+use_8bit = bool(captioning_model_config.get("USE_8BIT", False))
+if captioning_device.type == "cpu":
+    use_8bit = False
 model_config = get_model_config(
     captioning_model_config["MODEL_FAMILY"], 
     captioning_model_config["MODEL_ID"]
 )
+# --- FORCE OVERRIDE ---
+model_config["model_id"] = "llava-hf/llava-onevision-qwen2-0.5b-ov-hf"
+# ----------------------
 if captioning_model_config["MODEL_FAMILY"] == "llava":
     captioning_model = init_llava(
         model_config=model_config,
-        device=device,
-        use_8bit=captioning_model_config["USE_8BIT"]
+        device=captioning_device,
+        use_8bit=use_8bit
     )
 else:
     raise ValueError(f"Captioning model family {captioning_model_config['model_family']} not supported")
